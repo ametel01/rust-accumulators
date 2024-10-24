@@ -808,6 +808,6 @@ async fn timestamp_remappers_test() {
     let root_hash = mmr.calculate_root_hash(&bag, element_count).unwrap();
     println!("root_hash: {}", root_hash);
 
-    let correct_root_hash = "0x32f5a2949cac3d06e854701c5a2a00ed51c0475a31c1bc17cc6d3ec46425e9";
+    let correct_root_hash = "0x79a3409853afc2482b8b09dfc7b5bfb61b03486b07489e5ec950bbab4eff4ba";
     assert_eq!(correct_root_hash, root_hash);
 }

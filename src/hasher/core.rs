@@ -1,5 +1,8 @@
 use starknet::core::types::FromStrError;
-use std::{fmt::Debug, str::FromStr};
+use std::{
+    fmt::{self, Debug},
+    str::FromStr,
+};
 use strum_macros::EnumIter;
 use thiserror::Error;
 
@@ -25,22 +28,11 @@ pub enum HasherError {
 
 /// A trait for hash functions
 pub trait Hasher: Send + Sync + Debug {
-    /// Hashes a data which is a vector of strings
     fn hash(&self, data: Vec<String>) -> Result<String, HasherError>;
-
-    /// Checks if the element size is valid, i.e. if it is less than the block size
     fn is_element_size_valid(&self, element: &str) -> Result<bool, HasherError>;
-
-    /// Hashes a single element
     fn hash_single(&self, data: &str) -> Result<String, HasherError>;
-
-    /// Returns the genesis hash
     fn get_genesis(&self) -> Result<String, HasherError>;
-
-    /// Returns the name of the [`HashingFunction`]
     fn get_name(&self) -> HashingFunction;
-
-    /// Returns the block size in bits
     fn get_block_size_bits(&self) -> usize;
 }
 
@@ -65,13 +57,14 @@ impl FromStr for HashingFunction {
     }
 }
 
-impl ToString for HashingFunction {
-    fn to_string(&self) -> String {
-        match self {
-            HashingFunction::Keccak256 => "keccak".to_string(),
-            HashingFunction::Poseidon => "poseidon".to_string(),
-            HashingFunction::Pedersen => "pedersen".to_string(),
-        }
+impl fmt::Display for HashingFunction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let name = match self {
+            HashingFunction::Keccak256 => "keccak",
+            HashingFunction::Poseidon => "poseidon",
+            HashingFunction::Pedersen => "pedersen",
+        };
+        write!(f, "{}", name)
     }
 }
 
