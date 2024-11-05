@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 
-use crate::store::{Store, StoreError};
+use crate::core::{Store, StoreError};
 
 /// A store that is stored in memory
 #[derive(Debug)]

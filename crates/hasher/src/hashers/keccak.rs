@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::hasher::{byte_size, HasherError, HashingFunction};
+use crate::core::{byte_size, HasherError, HashingFunction};
 use num_bigint::BigInt;
 use num_traits::Num as _;
 use tiny_keccak::{Hasher as KeccakHasherTrait, Keccak};

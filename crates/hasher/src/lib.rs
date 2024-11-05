@@ -1,4 +1,4 @@
-mod core;
+pub mod core;
 pub use self::core::*;
 
 mod hashers;

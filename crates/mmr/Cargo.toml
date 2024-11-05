@@ -1,0 +1,15 @@
+[package]
+name = "mmr"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hasher = { path = "../hasher" }
+store = { path = "../store" }
+
+thiserror = "1.0.60"
+uuid = { version = "1.0.1", features = ["v4"] }
+
+[features]
+stacked_mmr = []
+draft_mmr = []

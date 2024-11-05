@@ -1,7 +1,5 @@
-use crate::{
-    mmr::{MMRError, MMR},
-    store::memory::InMemoryStore,
-};
+use crate::core::{MMRError, MMR};
+use store::stores::memory::InMemoryStore;
 use std::{collections::HashMap, sync::Arc};
 
 impl MMR {

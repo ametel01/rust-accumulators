@@ -1,10 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
-
-use crate::{
-    hasher::Hasher,
-    mmr::{elements_count_to_leaf_count, MMRError, SizesToMMRs, TreeMetadataKeys, MMR},
-    store::{InStoreTable, InStoreTableError, Store, SubKey, SubMMR},
-};
+use hasher::Hasher;
+use store::{InStoreTable, InStoreTableError, Store, SubKey, SubMMR};
+use crate::{helpers::elements_count_to_leaf_count, MMRError, SizesToMMRs, TreeMetadataKeys, MMR};
 
 type StoreArc = Arc<dyn Store>;
 type KeyList = Vec<String>;

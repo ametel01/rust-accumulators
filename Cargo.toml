@@ -1,18 +1,14 @@
-[package]
-name = "accumulators"
-version = "0.4.8"
-edition = "2021"
-license-file = "LICENSE"
-description = "Complete package of multiple Accumulators with Stores and hashing functions (Hashers)"
-homepage = "https://herodotus.dev/"
-repository = "https://github.com/HerodotusDev/rust-accumulators"
-documentation = "https://github.com/HerodotusDev/rust-accumulators/blob/main/README.md"
-readme = "README.md"
-keywords = ["accumulators", "mmr", "merkle", "tree", "incremental"]
-categories = ["cryptography", "data-structures", "database"]
-exclude = [".github", ".vscode"]
+[workspace]
+members = [
+    "crates/hasher",
+    "crates/merkle_tree",
+    "crates/mmr",
+    "crates/store",
+]
 
-[dependencies]
+resolver = "2"
+
+[workspace.dependencies]
 tokio = { version = "1.33.0", features = ["full"] } # Async runtime
 sqlx = { version = "0.8.2", features = [
     "runtime-tokio",
@@ -32,45 +28,45 @@ indexmap = "2.6.0"
 strum = "0.26" # better enums
 strum_macros = "0.26" # better enums
 
-[dev-dependencies]
-criterion = { version = "0.5", features = [
-    "html_reports",
-    "async",
-] } # Benchmarking
+# [dev-dependencies]
+# criterion = { version = "0.5", features = [
+#     "html_reports",
+#     "async",
+# ] } # Benchmarking
 
-[[bench]]
-name = "mmr_benchmark"
-harness = false
+# [[bench]]
+# name = "mmr_benchmark"
+# harness = false
 
-[[bench]]
-name = "incremental_benchmark"
-harness = false
+# [[bench]]
+# name = "incremental_benchmark"
+# harness = false
 
-[features]
-default = ["store", "hasher"]
-all = [
-    "store",
-    "sqlite",
-    "memory",
-    "hasher",
-    "keccak",
-    "poseidon",
-    "pedersen",
-    "mmr",
-    "stacked_mmr",
-    "draft_mmr",
-    "merkle_tree",
-    "incremental_merkle_tree",
-]
-store = []
-sqlite = ["store"]
-memory = ["store"]
-hasher = []
-keccak = ["hasher"]
-poseidon = ["hasher"]
-pedersen = ["hasher"]
-mmr = ["hasher", "store"]
-stacked_mmr = ["mmr"]
-draft_mmr = ["stacked_mmr"]
-merkle_tree = ["hasher", "store"]
-incremental_merkle_tree = ["merkle_tree"]
+# [features]
+# default = ["store", "hasher"]
+# all = [
+#     "store",
+#     "sqlite",
+#     "memory",
+#     "hasher",
+#     "keccak",
+#     "poseidon",
+#     "pedersen",
+#     "mmr",
+#     "stacked_mmr",
+#     "draft_mmr",
+#     "merkle_tree",
+#     "incremental_merkle_tree",
+# ]
+# store = []
+# sqlite = ["store"]
+# memory = ["store"]
+# hasher = []
+# keccak = ["hasher"]
+# poseidon = ["hasher"]
+# pedersen = ["hasher"]
+# mmr = ["hasher", "store"]
+# stacked_mmr = ["mmr"]
+# draft_mmr = ["stacked_mmr"]
+# merkle_tree = ["hasher", "store"]
+# incremental_merkle_tree = ["merkle_tree"]

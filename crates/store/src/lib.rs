@@ -5,6 +5,6 @@ pub use self::counter::*;
 mod table;
 pub use self::table::*;
 
-mod stores;
+pub mod stores;
 #[allow(unused_imports)]
 pub use self::stores::*;

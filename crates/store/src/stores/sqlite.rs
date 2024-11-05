@@ -4,7 +4,7 @@ use sqlx::{sqlite::SqliteConnectOptions, Pool, Row, Sqlite, SqlitePool};
 use std::collections::HashMap;
 use tokio::sync::Mutex;
 
-use crate::store::StoreError;
+use crate::core::StoreError;
 
 use super::super::Store;
 

@@ -4,10 +4,10 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::hasher::{Hasher, HasherError, HashingFunction};
-use crate::store::{InStoreCounter, InStoreTable, InStoreTableError, Store, StoreError, SubKey};
+use hasher::{Hasher, HasherError, HashingFunction};
+use store::{InStoreCounter, InStoreTable, InStoreTableError, Store, StoreError, SubKey};
 
-use crate::mmr::{
+use crate::{
     formatting::{format_peaks, format_proof, PeaksFormattingOptions},
     helpers::{
         array_deduplicate, element_index_to_leaf_index, find_peaks, find_siblings, get_peak_info,

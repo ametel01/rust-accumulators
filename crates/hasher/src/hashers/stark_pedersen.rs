@@ -1,4 +1,4 @@
-use crate::hasher::{byte_size, HasherError, HashingFunction};
+use crate::core::{byte_size, HasherError, HashingFunction};
 use starknet::core::crypto::pedersen_hash;
 use starknet_crypto::Felt;
 

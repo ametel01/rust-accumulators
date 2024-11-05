@@ -42,7 +42,6 @@ pub type GetFullKeyAndStoreFn =
 pub type GetFullKeysAndStoresFn =
     fn(&InStoreTable, Vec<SubKey>) -> Result<Vec<(Arc<dyn Store>, Vec<String>)>, InStoreTableError>;
 
-#[cfg(feature = "stacked_mmr")]
 #[derive(Debug, Clone)]
 pub struct SubMMR {
     pub size: usize,
@@ -107,7 +106,7 @@ pub struct InStoreTable {
     ///
     /// The default implementation is to use the store and key provided by the InStoreTable
     pub get_stores_and_full_keys: GetFullKeysAndStoresFn,
-    #[cfg(feature = "stacked_mmr")]
+    
     pub sub_mmrs: Option<Vec<SubMMR>>,
 }
 
@@ -119,7 +118,6 @@ impl InStoreTable {
             key,
             get_store_and_full_key: Self::default_get_store_and_full_key,
             get_stores_and_full_keys: Self::default_get_stores_and_full_keys,
-            #[cfg(feature = "stacked_mmr")]
             sub_mmrs: None,
         }
     }

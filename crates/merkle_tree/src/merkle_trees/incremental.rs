@@ -4,10 +4,8 @@ use thiserror::Error;
 
 use uuid::Uuid;
 
-use crate::{
-    hasher::{Hasher, HasherError},
-    store::{InStoreTable, InStoreTableError, Store, SubKey},
-};
+use hasher::{Hasher, HasherError};
+use store::{InStoreTable, InStoreTableError, Store, SubKey};
 
 #[derive(Debug)]
 pub enum TreeMetadataKeys {
@@ -22,6 +20,7 @@ struct Node {
 }
 
 /// Error for Incremental Merkle Tree
+
 #[derive(Error, Debug)]
 pub enum IncrementalMerkleTreeError {
     #[error("Invalid proof")]

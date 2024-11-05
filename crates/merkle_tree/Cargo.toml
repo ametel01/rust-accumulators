@@ -1,0 +1,12 @@
+[package]
+name = "merkle_tree"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hasher = { path = "../hasher" }
+store = { path = "../store" }
+
+indexmap = "2.6.0"
+thiserror = "1.0.68"
+uuid = { version = "1.0.1", features = ["v4"] }
