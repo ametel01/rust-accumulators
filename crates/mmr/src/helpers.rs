@@ -36,6 +36,7 @@ pub struct ProofOptions {
     pub formatting_opts: Option<FormattingOptionsBundle>,
 }
 
+#[derive(Clone, Default)]
 pub struct PeaksOptions {
     pub elements_count: Option<usize>,
     pub formatting_opts: Option<PeaksFormattingOptions>,
