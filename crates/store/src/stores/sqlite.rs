@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::Error;
 use sqlx::{sqlite::SqliteConnectOptions, Pool, Row, Sqlite, SqlitePool};
 use std::collections::HashMap;
-use tokio::sync::Mutex;
+use futures::lock::Mutex;
 
 use crate::core::StoreError;
 

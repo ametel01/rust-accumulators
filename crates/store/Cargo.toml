@@ -4,14 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-thiserror = "1.0.60"
+thiserror = { workspace = true }
 async-trait = "0.1.83"
 parking_lot = "0.12.3"
 sqlx = { version = "0.8.2", features = ["sqlite"] }
-tokio = { version = "1.41.0", features = ["sync"] }
+# tokio = { version = "1.41.0", features = ["sync"], optional = true }
+futures = "0.3"
 
 [features]
-all = ["sqlite", "memory"]
 default = ["sqlite"]
 sqlite = []
 memory = []
+# tokio-support = ["tokio"]
