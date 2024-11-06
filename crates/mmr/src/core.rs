@@ -137,7 +137,7 @@ impl MMR {
         let store_key = format!("{}:{}", mmr_id, key);
         match sub_key {
             SubKey::None => store_key,
-            _ => format!("{}:{}", store_key, sub_key.to_string()),
+            _ => format!("{}:{}", store_key, sub_key),
         }
     }
 

@@ -106,7 +106,7 @@ pub struct InStoreTable {
     ///
     /// The default implementation is to use the store and key provided by the InStoreTable
     pub get_stores_and_full_keys: GetFullKeysAndStoresFn,
-    
+
     pub sub_mmrs: Option<Vec<SubMMR>>,
 }
 

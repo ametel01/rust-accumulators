@@ -1,6 +1,6 @@
 use crate::core::{MMRError, MMR};
-use store::stores::memory::InMemoryStore;
 use std::{collections::HashMap, sync::Arc};
+use store::stores::memory::InMemoryStore;
 
 impl MMR {
     pub async fn start_draft(&mut self) -> Result<DraftMMR, MMRError> {

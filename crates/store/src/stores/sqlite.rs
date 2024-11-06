@@ -1,8 +1,8 @@
 use async_trait::async_trait;
+use futures::lock::Mutex;
 use sqlx::Error;
 use sqlx::{sqlite::SqliteConnectOptions, Pool, Row, Sqlite, SqlitePool};
 use std::collections::HashMap;
-use futures::lock::Mutex;
 
 use crate::core::StoreError;
 
