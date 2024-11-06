@@ -1,4 +1,4 @@
-use starknet::core::types::FromStrError;
+use starknet_core::types::FromStrError;
 use std::{
     fmt::{self, Debug},
     str::FromStr,
