@@ -4,8 +4,8 @@ use std::sync::Arc;
 use thiserror::Error;
 use uuid::Uuid;
 
-use hasher::{Hasher, HasherError, HashingFunction};
-use store::{InStoreCounter, InStoreTable, InStoreTableError, Store, StoreError, SubKey};
+pub use hasher::{Hasher, HasherError, HashingFunction};
+pub use store::{InStoreCounter, InStoreTable, InStoreTableError, Store, StoreError, SubKey};
 
 use crate::{
     formatting::{format_peaks, format_proof, PeaksFormattingOptions},
@@ -168,7 +168,7 @@ impl MMR {
         let mut last_element_idx = self.elements_count.increment().await?;
         let leaf_element_index = last_element_idx;
 
-        //? Store the hash in the database
+        // Store the hash in the database
         self.hashes
             .set(&value, SubKey::Usize(last_element_idx))
             .await?;
@@ -195,18 +195,17 @@ impl MMR {
             self.hashes
                 .set(&parent_hash, SubKey::Usize(last_element_idx))
                 .await?;
+
             peaks.push(parent_hash);
         }
 
         self.elements_count.set(last_element_idx).await?;
+        let leaves = self.leaves_count.increment().await?;
 
         let bag = self.bag_the_peaks(None).await?;
-
-        // Compute the new root hash
         let root_hash = self.calculate_root_hash(&bag, last_element_idx)?;
         self.root_hash.set(&root_hash, SubKey::None).await?;
 
-        let leaves = self.leaves_count.increment().await?;
 
         Ok(AppendResult {
             leaves_count: leaves,
@@ -470,26 +469,29 @@ impl MMR {
             Some(count) => count,
             None => self.elements_count.get().await?,
         };
+    
         let peaks_idxs = find_peaks(tree_size);
-
+    
         let peaks_hashes = self.retrieve_peaks_hashes(peaks_idxs.clone(), None).await?;
-
+    
         match peaks_idxs.len() {
-            // Use original peaks_idxs here
             0 => Ok("0x0".to_string()),
             1 => Ok(peaks_hashes[0].clone()),
             _ => {
                 let mut peaks_hashes: VecDeque<String> = peaks_hashes.into();
                 let last = peaks_hashes.pop_back().unwrap();
                 let second_last = peaks_hashes.pop_back().unwrap();
-                let root0 = self.hasher.hash(vec![second_last, last])?;
-
-                Ok(peaks_hashes.into_iter().rev().fold(root0, |prev, cur| {
-                    self.hasher.hash(vec![cur, prev]).unwrap()
-                }))
+                let root0 = self.hasher.hash(vec![second_last.clone(), last.clone()])?;
+    
+                let final_root = peaks_hashes.into_iter().rev().fold(root0, |prev, cur| {
+                    let new_root = self.hasher.hash(vec![cur.clone(), prev.clone()]).unwrap();
+                    new_root
+                });
+    
+                Ok(final_root)
             }
         }
-    }
+    }    
 
     pub fn calculate_root_hash(
         &self,
@@ -503,5 +505,46 @@ impl MMR {
             Ok(root_hash) => Ok(root_hash),
             Err(e) => Err(MMRError::Hasher(e)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::Arc;
+    use hasher::stark_poseidon::StarkPoseidonHasher;
+    use store::memory::InMemoryStore;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_append_sync_vs_async() -> Result<(), MMRError> {
+        let store = InMemoryStore::default();
+        let store_rc = Arc::new(store);
+        let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
+        
+        let mut async_mmr = MMR::new(store_rc, hasher, None);
+
+        // Append the same elements to both
+        let elements = vec![
+            "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c".to_string(),
+            "0x17cf53189035bbae5bce5c844355badd701aa9d2dd4b4f5ab1f9f0e8dd9fea5b".to_string(),
+            "0x6eade12ecbbcfa28b6ba541ce95ca1983ab90508def3adf83c4cb0af89c44c30".to_string(),
+        ];
+
+        for element in &elements {
+            async_mmr.append(element.clone()).await?; // Use the sync append method here
+        }
+
+        // Compare results
+        let async_peaks = async_mmr.get_peaks(PeaksOptions::default()).await?;
+        println!("async_peaks: {:?}", async_peaks);
+        let async_elements_count = async_mmr.elements_count.get().await?;
+        println!("async_elements_count: {}", async_elements_count);
+
+        let async_root_hash = async_mmr.root_hash.get(SubKey::None).await?;
+        println!("async_root_hash: {:?}", async_root_hash.unwrap());
+
+
+        Ok(())
     }
 }

@@ -8,3 +8,4 @@ pub use self::table::*;
 pub mod stores;
 #[allow(unused_imports)]
 pub use self::stores::*;
+pub use sqlx::SqlitePool;
