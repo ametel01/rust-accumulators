@@ -206,7 +206,6 @@ impl MMR {
         let root_hash = self.calculate_root_hash(&bag, last_element_idx)?;
         self.root_hash.set(&root_hash, SubKey::None).await?;
 
-
         Ok(AppendResult {
             leaves_count: leaves,
             elements_count: last_element_idx,
@@ -469,11 +468,11 @@ impl MMR {
             Some(count) => count,
             None => self.elements_count.get().await?,
         };
-    
+
         let peaks_idxs = find_peaks(tree_size);
-    
+
         let peaks_hashes = self.retrieve_peaks_hashes(peaks_idxs.clone(), None).await?;
-    
+
         match peaks_idxs.len() {
             0 => Ok("0x0".to_string()),
             1 => Ok(peaks_hashes[0].clone()),
@@ -482,16 +481,15 @@ impl MMR {
                 let last = peaks_hashes.pop_back().unwrap();
                 let second_last = peaks_hashes.pop_back().unwrap();
                 let root0 = self.hasher.hash(vec![second_last.clone(), last.clone()])?;
-    
+
                 let final_root = peaks_hashes.into_iter().rev().fold(root0, |prev, cur| {
-                    let new_root = self.hasher.hash(vec![cur.clone(), prev.clone()]).unwrap();
-                    new_root
+                    self.hasher.hash(vec![cur.clone(), prev.clone()]).unwrap()
                 });
-    
+
                 Ok(final_root)
             }
         }
-    }    
+    }
 
     pub fn calculate_root_hash(
         &self,
@@ -511,8 +509,8 @@ impl MMR {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use hasher::stark_poseidon::StarkPoseidonHasher;
+    use std::sync::Arc;
     use store::memory::InMemoryStore;
     use tokio;
 
@@ -521,7 +519,7 @@ mod tests {
         let store = InMemoryStore::default();
         let store_rc = Arc::new(store);
         let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
-        
+
         let mut async_mmr = MMR::new(store_rc, hasher, None);
 
         // Append the same elements to both
@@ -543,7 +541,6 @@ mod tests {
 
         let async_root_hash = async_mmr.root_hash.get(SubKey::None).await?;
         println!("async_root_hash: {:?}", async_root_hash.unwrap());
-
 
         Ok(())
     }
