@@ -176,7 +176,6 @@ impl MMR {
         peaks.push(value);
 
         let no_merges = leaf_count_to_append_no_merges(self.leaves_count.get().await?);
-
         for _ in 0..no_merges {
             last_element_idx += 1;
 
@@ -184,14 +183,12 @@ impl MMR {
                 Some(hash) => hash,
                 None => return Err(MMRError::NoHashFoundForIndex(last_element_idx)),
             };
-
             let left_hash = match peaks.pop() {
                 Some(hash) => hash,
                 None => return Err(MMRError::NoHashFoundForIndex(last_element_idx)),
             };
 
             let parent_hash = self.hasher.hash(vec![left_hash, right_hash])?;
-
             self.hashes
                 .set(&parent_hash, SubKey::Usize(last_element_idx))
                 .await?;
@@ -203,7 +200,8 @@ impl MMR {
         let leaves = self.leaves_count.increment().await?;
 
         let bag = self.bag_the_peaks(None).await?;
-        let root_hash = self.calculate_root_hash(&bag, last_element_idx)?;
+
+        let root_hash = self.calculate_root_hash(&bag, last_element_idx).expect("Calculate root hash failed");
         self.root_hash.set(&root_hash, SubKey::None).await?;
 
         Ok(AppendResult {
@@ -515,33 +513,188 @@ mod tests {
     use tokio;
 
     #[tokio::test]
-    async fn test_append_sync_vs_async() -> Result<(), MMRError> {
-        let store = InMemoryStore::default();
-        let store_rc = Arc::new(store);
+    async fn test_guest_mmr_initialization() -> Result<(), MMRError> {
+        let store = Arc::new(InMemoryStore::default());
         let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
+        let initial_peaks = vec!["0xabc".to_string(), "0xdef".to_string()];
+        let elements_count = 3;
+        let leaves_count = 2;
+        let mmr_id = Some("test_mmr".to_string());
+        let mmr = MMR::new(store.clone(), hasher.clone(), mmr_id);
 
-        let mut async_mmr = MMR::new(store_rc, hasher, None);
-
-        // Append the same elements to both
-        let elements = vec![
-            "0xe22c56f211f03baadcc91e4eb9a24344e6848c5df4473988f893b58223f5216c".to_string(),
-            "0x17cf53189035bbae5bce5c844355badd701aa9d2dd4b4f5ab1f9f0e8dd9fea5b".to_string(),
-            "0x6eade12ecbbcfa28b6ba541ce95ca1983ab90508def3adf83c4cb0af89c44c30".to_string(),
-        ];
-
-        for element in &elements {
-            async_mmr.append(element.clone()).await?; // Use the sync append method here
+        // Manually set initial peaks
+        let peak_positions = find_peaks(elements_count);
+        for (peak, pos) in initial_peaks.iter().zip(&peak_positions) {
+            mmr.hashes
+                .set(peak, SubKey::Usize(*pos))
+                .await
+                .expect("Failed to set peak hash");
         }
 
-        // Compare results
-        let async_peaks = async_mmr.get_peaks(PeaksOptions::default()).await?;
-        println!("async_peaks: {:?}", async_peaks);
-        let async_elements_count = async_mmr.elements_count.get().await?;
-        println!("async_elements_count: {}", async_elements_count);
+        mmr.elements_count.set(elements_count).await?;
+        mmr.leaves_count.set(leaves_count).await?;
 
-        let async_root_hash = async_mmr.root_hash.get(SubKey::None).await?;
-        println!("async_root_hash: {:?}", async_root_hash.unwrap());
+        // Check elements and leaves count
+        assert_eq!(mmr.elements_count.get().await?, elements_count);
+        assert_eq!(mmr.leaves_count.get().await?, leaves_count);
+
+        // Check initial peaks are stored correctly
+        for (peak, pos) in initial_peaks.iter().zip(peak_positions) {
+            let stored_peak = mmr
+                .hashes
+                .get(SubKey::Usize(pos))
+                .await?
+                .expect("Peak not found");
+            assert_eq!(&stored_peak, peak);
+        }
 
         Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_guest_mmr_append() -> Result<(), MMRError> {
+        // Initialize an empty MMR
+        let store = Arc::new(InMemoryStore::default());
+        let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
+        let mut mmr = MMR::new(store.clone(), hasher.clone(), None);
+
+        // Append a value
+        let value = "0x123".to_string();
+        let append_result = mmr.append(value.clone()).await.expect("Append failed");
+
+        // Check counts
+        assert_eq!(mmr.elements_count.get().await?, 1);
+        assert_eq!(mmr.leaves_count.get().await?, 1);
+
+        // Check the new element is stored
+        let stored_value = mmr
+            .hashes
+            .get(SubKey::Usize(1))
+            .await?
+            .expect("Value not found");
+        assert_eq!(stored_value, value);
+
+        // Verify append result
+        assert_eq!(append_result.leaves_count, 1);
+        assert_eq!(append_result.elements_count, 1);
+        assert_eq!(append_result.element_index, 1);
+
+        // Verify root hash
+        let expected_bag = mmr.bag_the_peaks(None).await.expect("Bag the peaks failed");
+        let expected_root_hash = mmr
+            .calculate_root_hash(&expected_bag, mmr.elements_count.get().await?)
+            .expect("Calculate root hash failed");
+        assert_eq!(append_result.root_hash, expected_root_hash);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_guest_mmr_get_peaks() -> Result<(), MMRError> {
+        // Initialize MMR and append elements
+        let store = Arc::new(InMemoryStore::default());
+        let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
+        let mut mmr = MMR::new(store.clone(), hasher.clone(), None);
+
+        mmr.append("0x6c17009d66e34c1d6b7e4d73fd5a105243feb10c7cae9598d60b0fa97d08868".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x4998b07fef69c1b1658fcb44d44fa5bb0ca62c835b26fe763ca14b61a6595da".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x7337cf1262bf9eeaecffe02776fa1cc9fd35c6fc49303a2b5f39d96a7b46afa".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x16fa2f065f204a16db293c9adf370da4e08eea45874692dfa00123b21bbfe81".to_string())
+            .await
+            .expect("Append failed");
+
+        // Get peaks
+        let peaks_options = PeaksOptions {
+            elements_count: None,
+            formatting_opts: None,
+        };
+        let peaks = mmr
+            .get_peaks(peaks_options)
+            .await
+            .expect("Get peaks failed");
+        // Expected peaks
+        let elements_count = mmr.elements_count.get().await?;
+        let peaks_indices = find_peaks(elements_count);
+        let expected_peaks = mmr
+            .retrieve_peaks_hashes(peaks_indices, None)
+            .await
+            .expect("Retrieve peaks hashes failed");
+
+        assert_eq!(peaks, expected_peaks);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_guest_mmr_bag_the_peaks() -> Result<(), MMRError> {
+        // Initialize MMR and append elements
+        let store = Arc::new(InMemoryStore::default());
+        let hasher = Arc::new(StarkPoseidonHasher::new(Some(false)));
+        let mut mmr = MMR::new(store.clone(), hasher.clone(), None);
+
+        mmr.append("0x6c17009d66e34c1d6b7e4d73fd5a105243feb10c7cae9598d60b0fa97d08868".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x4998b07fef69c1b1658fcb44d44fa5bb0ca62c835b26fe763ca14b61a6595da".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x7337cf1262bf9eeaecffe02776fa1cc9fd35c6fc49303a2b5f39d96a7b46afa".to_string())
+            .await
+            .expect("Append failed");
+        mmr.append("0x16fa2f065f204a16db293c9adf370da4e08eea45874692dfa00123b21bbfe81".to_string())
+            .await
+            .expect("Append failed");
+
+        // Bag the peaks
+        let bag = mmr.bag_the_peaks(None).await.expect("Bag the peaks failed");
+
+        // Calculate root hash
+        let elements_count = mmr.elements_count.get().await?;
+        let root_hash = mmr.calculate_root_hash(&bag, elements_count).expect("Calculate root hash failed");
+
+        // Verify root hash is not empty
+        assert!(!root_hash.is_empty());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_format_peaks() {
+        let peaks = vec!["0x1".to_string(), "0x2".to_string()];
+        let formatting_opts = PeaksFormattingOptions {
+            output_size: 4,
+            null_value: "0x0".to_string(),
+        };
+
+        let formatted_peaks =
+            format_peaks(peaks.clone(), &formatting_opts).expect("Format peaks failed");
+
+        let expected_peaks = vec![
+            "0x1".to_string(),
+            "0x2".to_string(),
+            "0x0".to_string(),
+            "0x0".to_string(),
+        ];
+
+        assert_eq!(formatted_peaks, expected_peaks);
+    }
+
+    #[test]
+    fn test_format_peaks_error() {
+        let peaks = vec!["0x1".to_string(), "0x2".to_string(), "0x3".to_string()];
+        let formatting_opts = PeaksFormattingOptions {
+            output_size: 2,
+            null_value: "0x0".to_string(),
+        };
+
+        let result = format_peaks(peaks, &formatting_opts);
+
+        assert!(matches!(result, Err(FormattingError::PeaksOutputSizeError)));
     }
 }
