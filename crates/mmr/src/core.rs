@@ -201,7 +201,9 @@ impl MMR {
 
         let bag = self.bag_the_peaks(None).await?;
 
-        let root_hash = self.calculate_root_hash(&bag, last_element_idx).expect("Calculate root hash failed");
+        let root_hash = self
+            .calculate_root_hash(&bag, last_element_idx)
+            .expect("Calculate root hash failed");
         self.root_hash.set(&root_hash, SubKey::None).await?;
 
         Ok(AppendResult {
@@ -656,7 +658,9 @@ mod tests {
 
         // Calculate root hash
         let elements_count = mmr.elements_count.get().await?;
-        let root_hash = mmr.calculate_root_hash(&bag, elements_count).expect("Calculate root hash failed");
+        let root_hash = mmr
+            .calculate_root_hash(&bag, elements_count)
+            .expect("Calculate root hash failed");
 
         // Verify root hash is not empty
         assert!(!root_hash.is_empty());

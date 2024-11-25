@@ -1,4 +1,4 @@
-use accumulators::hasher::{stark_pedersen::StarkPedersenHasher, Hasher};
+use hasher::{hashers::stark_pedersen::StarkPedersenHasher, Hasher};
 
 #[test]
 fn should_compute_a_hash() {

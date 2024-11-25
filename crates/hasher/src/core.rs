@@ -42,6 +42,7 @@ pub enum HashingFunction {
     Keccak256,
     Poseidon,
     Pedersen,
+    Sha256,
 }
 
 impl FromStr for HashingFunction {
@@ -52,6 +53,7 @@ impl FromStr for HashingFunction {
             "keccak" => Ok(HashingFunction::Keccak256),
             "poseidon" => Ok(HashingFunction::Poseidon),
             "pedersen" => Ok(HashingFunction::Pedersen),
+            "sha256" => Ok(HashingFunction::Sha256),
             _ => Err(HasherError::InvalidHashingFunction),
         }
     }
@@ -63,6 +65,7 @@ impl fmt::Display for HashingFunction {
             HashingFunction::Keccak256 => "keccak",
             HashingFunction::Poseidon => "poseidon",
             HashingFunction::Pedersen => "pedersen",
+            HashingFunction::Sha256 => "sha256",
         };
         write!(f, "{}", name)
     }

@@ -70,3 +70,22 @@ strum_macros = "0.26" # better enums
 # draft_mmr = ["stacked_mmr"]
 # merkle_tree = ["hasher", "store"]
 # incremental_merkle_tree = ["merkle_tree"]
+
+[package]
+name = "accumulators"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hasher = { path = "crates/hasher" }
+merkle_tree = { path = "crates/merkle_tree" }
+mmr = { path = "crates/mmr" }
+store = { path = "crates/store" }
+
+# Add any other dependencies needed for tests
+[dev-dependencies]
+tokio = { workspace = true, features = ["full", "test-util"] }
+hasher = { path = "crates/hasher", features = ["all"] }
+merkle_tree = { path = "crates/merkle_tree" }
+store = { path = "crates/store" }
+hex = "0.4.3"

@@ -1,4 +1,4 @@
-use accumulators::hasher::{stark_poseidon::StarkPoseidonHasher, Hasher};
+use hasher::{stark_poseidon::StarkPoseidonHasher, Hasher};
 
 #[test]
 fn should_compute_a_hash() {
