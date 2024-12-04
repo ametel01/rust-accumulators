@@ -280,7 +280,7 @@ impl MMR {
 
     pub async fn get_proofs(
         &self,
-        elements_indexes: Vec<usize>,
+        elements_indexes: &Vec<usize>,
         options: Option<ProofOptions>,
     ) -> Result<Vec<Proof>, MMRError> {
         let options = options.unwrap_or_default();
@@ -289,7 +289,7 @@ impl MMR {
             None => self.elements_count.get().await?,
         };
 
-        for &element_index in &elements_indexes {
+        for &element_index in elements_indexes {
             if element_index == 0 {
                 return Err(MMRError::InvalidElementIndex);
             }
@@ -302,7 +302,7 @@ impl MMR {
         let peaks_hashes = self.retrieve_peaks_hashes(peaks, None).await?;
 
         let mut siblings_per_element = HashMap::new();
-        for &element_id in &elements_indexes {
+        for &element_id in elements_indexes {
             siblings_per_element.insert(element_id, find_siblings(element_id, tree_size)?);
         }
         let sibling_hashes_to_get = array_deduplicate(
@@ -321,7 +321,7 @@ impl MMR {
         let element_hashes = self.hashes.get_many(elements_ids_str).await?;
 
         let mut proofs: Vec<Proof> = Vec::new();
-        for &element_id in &elements_indexes {
+        for &element_id in elements_indexes {
             let siblings = siblings_per_element.get(&element_id).unwrap();
             let mut siblings_hashes: Vec<String> = siblings
                 .iter()

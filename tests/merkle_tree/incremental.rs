@@ -1,6 +1,4 @@
-
 use std::sync::Arc;
-
 
 use hasher::hashers::stark_poseidon::StarkPoseidonHasher;
 use merkle_tree::merkle_trees::incremental::IncrementalMerkleTree;

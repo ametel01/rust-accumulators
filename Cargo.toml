@@ -1,3 +1,8 @@
+[package]
+name = "accumulators"
+version = "0.1.0"
+edition = "2021"
+
 [workspace]
 members = [
     "crates/hasher",
@@ -70,11 +75,6 @@ strum_macros = "0.26" # better enums
 # draft_mmr = ["stacked_mmr"]
 # merkle_tree = ["hasher", "store"]
 # incremental_merkle_tree = ["merkle_tree"]
-
-[package]
-name = "accumulators"
-version = "0.1.0"
-edition = "2021"
 
 [dependencies]
 hasher = { path = "crates/hasher" }
